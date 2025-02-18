@@ -102,7 +102,7 @@ soxr==0.5.0.post1
 speechbrain==1.0.2
 sympy==1.13.1
 tbb==2021.12.0
-tensorboard==2.18.0
+tensorboard
 tensorboard-data-server==0.7.2
 tensorflow>=2.10,<2.14
 termcolor==2.4.0
