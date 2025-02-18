@@ -73,7 +73,7 @@ pooch==1.8.2
 propcache==0.2.1
 protobuf==4.25.3
 pyarrow==19.0.0
-PyAudio==0.2.14
+
 pycparser==2.22
 pygame==2.6.0
 Pygments==2.18.0
