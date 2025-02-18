@@ -26,7 +26,7 @@ Flask-Cors==5.0.0
 flatbuffers==24.3.25
 frozenlist==1.5.0
 fsspec==2024.6.0
-
+gist
 gdown==5.2.0
 google-pasta==0.2.0
 grpcio==1.64.0
@@ -41,7 +41,7 @@ itsdangerous==2.2.0
 Jinja2==3.1.4
 joblib==1.4.2
 kaggle==1.6.17
-keras==3.8.0
+keras
 lazy_loader==0.4
 libclang==18.1.1
 librosa==0.10.2.post1
