@@ -5,14 +5,29 @@ from deepface import DeepFace
 import numpy as np
 import base64
 import time
+<<<<<<< HEAD
 
 # For text emotion analysis using transformers
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
+=======
+import torch
+import os
+
+# For text emotion analysis using transformers
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from huggingface_hub import hf_hub_download
+>>>>>>> 55ef1dc (hyfd)
 
 app = Flask(__name__)
 CORS(app)
 
+<<<<<<< HEAD
+=======
+# Hugging Face authentication token
+HUGGINGFACE_TOKEN = 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  # Make sure to set this environment variable
+
+>>>>>>> 55ef1dc (hyfd)
 ##############################################
 # IMAGE-BASED EMOTION DETECTION (DeepFace API)
 ##############################################
@@ -51,9 +66,20 @@ def analyze_emotion():
 ##################################################
 # TEXT-BASED EMOTION DETECTION (Transformers API)
 ##################################################
+<<<<<<< HEAD
 # Load tokenizer and model once at startup
 model_path = "./emotions_finetunedmodel"
 tokenizer = AutoTokenizer.from_pretrained(model_path)
+=======
+# Download model files from Hugging Face Hub (using the private token)
+model_path = hf_hub_download("BSNSSWB/emotion-model", "model.safetensors", use_auth_token=HUGGINGFACE_TOKEN)
+tokenizer_path = hf_hub_download("BSNSSWB/emotion-model", "tokenizer.json", use_auth_token=HUGGINGFACE_TOKEN)
+config_path = hf_hub_download("BSNSSWB/emotion-model", "config.json", use_auth_token=HUGGINGFACE_TOKEN)
+vocab_path = hf_hub_download("BSNSSWB/emotion-model", "vocab.txt", use_auth_token=HUGGINGFACE_TOKEN)
+
+# Load the tokenizer and model from Hugging Face
+tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+>>>>>>> 55ef1dc (hyfd)
 model = AutoModelForSequenceClassification.from_pretrained(model_path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
