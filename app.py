@@ -6,18 +6,19 @@ import numpy as np
 import base64
 import time
 import os
-
-# For text emotion analysis using transformers
-from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
-from huggingface_hub import hf_hub_download
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+from huggingface_hub import hf_hub_download, login
 
 app = Flask(__name__)
 CORS(app)
 
-# Set up your Hugging Face authentication token.
-# It's best to use an environment variable rather than hardcoding the token.
-HUGGINGFACE_TOKEN = os.environ.get("HUGGINGFACE_TOKEN", "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")
+#  Secure Hugging Face authentication token (must be set in Render environment variables)
+HUGGINGFACE_TOKEN = os.environ.get("HUGGINGFACE_TOKEN")
+
+#  Login to Hugging Face if token is provided
+if HUGGINGFACE_TOKEN:
+    login(token=HUGGINGFACE_TOKEN)
 
 ##############################################
 # IMAGE-BASED EMOTION DETECTION (DeepFace API)
@@ -58,24 +59,24 @@ def analyze_emotion():
 # TEXT-BASED EMOTION DETECTION (Transformers API)
 ##################################################
 
-# Load tokenizer and model once at startup
-model_path_local = "./emotions_finetunedmodel"
-tokenizer = AutoTokenizer.from_pretrained(model_path_local)
+#  Use Hugging Face repo instead of local path
+MODEL_NAME = "BSNSSWB/emotion-model"  # Replace with your actual Hugging Face model repo
 
-# Download model files from Hugging Face Hub (using the private token)
-model_path_hf = hf_hub_download("BSNSSWB/emotion-model", "model.safetensors", use_auth_token=HUGGINGFACE_TOKEN)
-tokenizer_path = hf_hub_download("BSNSSWB/emotion-model", "tokenizer.json", use_auth_token=HUGGINGFACE_TOKEN)
-config_path = hf_hub_download("BSNSSWB/emotion-model", "config.json", use_auth_token=HUGGINGFACE_TOKEN)
-vocab_path = hf_hub_download("BSNSSWB/emotion-model", "vocab.txt", use_auth_token=HUGGINGFACE_TOKEN)
-
-# Load the tokenizer and model from the downloaded files
-tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-model = AutoModelForSequenceClassification.from_pretrained(model_path_hf)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model.to(device)
+try:
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME, use_auth_token=HUGGINGFACE_TOKEN)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, use_auth_token=HUGGINGFACE_TOKEN)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model.to(device)
+    print(" Model loaded successfully!")
+except Exception as e:
+    print(f" Error loading model: {e}")
+    tokenizer, model = None, None  # Avoids crashes
 
 @app.route('/analyze_text', methods=['POST'])
 def analyze_text_emotion():
+    if tokenizer is None or model is None:
+        return jsonify({'error': 'Model not loaded'}), 500
+    
     data = request.get_json()
     if not data or 'text' not in data:
         return jsonify({'error': 'No text provided'}), 400
@@ -95,7 +96,7 @@ def analyze_text_emotion():
             outputs = model(**inputs)
         # Compute probabilities using softmax
         probs = torch.nn.functional.softmax(outputs.logits, dim=-1)
-        probs_list = probs.tolist()  # e.g., [ [0.1, 0.7, 0.2] ]
+        probs_list = probs.tolist()
         predicted_index = torch.argmax(probs).item()
         dominant_emotion = model.config.id2label[predicted_index]
         predicted_probability = probs_list[0][predicted_index]
@@ -111,6 +112,6 @@ def analyze_text_emotion():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    # Render expects the app to bind to the port specified by the PORT environment variable
+    # Ensure correct port binding for Render deployment
     port = int(os.environ.get("PORT", 5000))
     app.run(debug=True, host="0.0.0.0", port=port)
