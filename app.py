@@ -13,12 +13,16 @@ from huggingface_hub import hf_hub_download, login
 app = Flask(__name__)
 CORS(app)
 
-#  Secure Hugging Face authentication token (must be set in Render environment variables)
+# Secure Hugging Face authentication token (must be set in Render environment variables)
 HUGGINGFACE_TOKEN = os.environ.get("HUGGINGFACE_TOKEN")
 
-#  Login to Hugging Face if token is provided
+# Login to Hugging Face if token is provided
 if HUGGINGFACE_TOKEN:
     login(token=HUGGINGFACE_TOKEN)
+
+# Ensure TensorFlow/PyTorch uses CPU to avoid memory overload in limited environments
+import tensorflow as tf
+tf.config.set_visible_devices([], 'GPU')  # Disable GPU usage for TensorFlow
 
 ##############################################
 # IMAGE-BASED EMOTION DETECTION (DeepFace API)
@@ -59,7 +63,7 @@ def analyze_emotion():
 # TEXT-BASED EMOTION DETECTION (Transformers API)
 ##################################################
 
-#  Use Hugging Face repo instead of local path
+# Use Hugging Face repo instead of local path
 MODEL_NAME = "BSNSSWB/emotion-model"  # Replace with your actual Hugging Face model repo
 
 try:
@@ -67,9 +71,9 @@ try:
     model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME, use_auth_token=HUGGINGFACE_TOKEN)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model.to(device)
-    print(" Model loaded successfully!")
+    print("Model loaded successfully!")
 except Exception as e:
-    print(f" Error loading model: {e}")
+    print(f"Error loading model: {e}")
     tokenizer, model = None, None  # Avoids crashes
 
 @app.route('/analyze_text', methods=['POST'])
